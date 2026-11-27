@@ -1,6 +1,9 @@
 """Verificador de la ficha de diseño funcional de StockIA (Bloque 33).
 
 Comprueba docs/ficha_diseno_funcional.md y docs/diagrama_arquitectura.png.
+Valida las secciones 1 a 3. Las secciones 4 y 5 pueden estar pendientes
+(estado del Bloque 33) o completas (Bloque 34), pero no ambas cosas a la vez;
+su contenido lo valida verificar_ficha_completa.py.
 
 Uso:
     py verificar_ficha.py [--ficha RUTA] [--raiz DIRECTORIO]
@@ -117,12 +120,26 @@ def verificar_secciones_completas(cuerpos: dict[int, str]) -> list[str]:
 
 
 def verificar_pendientes(cuerpos: dict[int, str]) -> list[str]:
+    """Secciones 4 y 5: solo la marca pendiente (Bloque 33) o completas sin marcas (Bloque 34)."""
     errores = []
     for num in (4, 5):
         cuerpo = cuerpos.get(num)
-        if cuerpo is not None and cuerpo != MARCA_PENDIENTE:
-            errores.append(f"La sección {num} debe contener solo '{MARCA_PENDIENTE}' hasta el Bloque 34.")
+        if cuerpo is None or cuerpo == MARCA_PENDIENTE:
+            continue
+        if not cuerpo:
+            errores.append(f"La sección {num} está vacía.")
+        elif MARCA_PENDIENTE in cuerpo:
+            errores.append(f"La sección {num} mezcla la marca '{MARCA_PENDIENTE}' con contenido.")
+        elif MARCA_COMPLETAR in cuerpo:
+            errores.append(f"La sección {num} contiene {MARCA_COMPLETAR}.")
     return errores
+
+
+def estado_secciones_4_5(cuerpos: dict[int, str]) -> str:
+    pendientes = [n for n in (4, 5) if cuerpos.get(n) == MARCA_PENDIENTE]
+    if not pendientes:
+        return "secciones 4 y 5 redactadas (validar con verificar_ficha_completa.py)"
+    return f"secciones pendientes para el Bloque 34: {', '.join(map(str, pendientes))}"
 
 
 def verificar_problema_sin_tecnologia(cuerpos: dict[int, str]) -> list[str]:
@@ -247,7 +264,8 @@ def main(argv: list[str] | None = None) -> int:
         for e in errores:
             print(f"  - {e}")
         return 1
-    print(MENSAJE_OK)
+    cuerpos, _ = separar_secciones(args.ficha.read_text(encoding="utf-8"))
+    print(f"{MENSAJE_OK}; {estado_secciones_4_5(cuerpos)}")
     return 0
 
 

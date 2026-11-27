@@ -66,10 +66,23 @@ class TestFichaNegativa(BaseFicha):
         texto = FICHA_REAL.replace("## 5. Plan de construcción por hitos", "## Plan")
         self.assertError(texto, "Falta la sección '## 5.")
 
-    def test_seccion_4_completada_anticipadamente(self):
-        texto = FICHA_REAL.replace("## 4. Criterios de aceptación\n\n" + vf.MARCA_PENDIENTE,
-                                   "## 4. Criterios de aceptación\n\n- CA-01: algo")
-        self.assertError(texto, "La sección 4 debe contener solo")
+    def _con_secciones_4_5_pendientes(self):
+        inicio = FICHA_REAL.index("## 4. Criterios de aceptación")
+        return (FICHA_REAL[:inicio]
+                + "## 4. Criterios de aceptación\n\n" + vf.MARCA_PENDIENTE + "\n\n"
+                + "## 5. Plan de construcción por hitos\n\n" + vf.MARCA_PENDIENTE + "\n")
+
+    def test_secciones_4_5_pendientes_compatibles_con_bloque_33(self):
+        self.assertEqual(self.errores(self._con_secciones_4_5_pendientes()), [])
+
+    def test_seccion_4_mezcla_pendiente_y_contenido(self):
+        texto = FICHA_REAL.replace("## 4. Criterios de aceptación\n",
+                                   "## 4. Criterios de aceptación\n\n" + vf.MARCA_PENDIENTE + "\n", 1)
+        self.assertError(texto, "La sección 4 mezcla la marca")
+
+    def test_seccion_5_con_completar(self):
+        texto = FICHA_REAL.replace("Total planificado:", "[COMPLETAR] Total planificado:")
+        self.assertError(texto, "La sección 5 contiene [COMPLETAR]")
 
     def test_rf_duplicado(self):
         texto = FICHA_REAL.replace("| RF-03 |", "| RF-02 |", 1)
